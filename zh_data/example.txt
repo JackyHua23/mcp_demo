@@ -1,0 +1,42 @@
+The image contains a bar chart titled "IMF economic projections" which shows the projected annualized rate of Real GDP growth for the year 2023 and 2024 for various countries and regions. The chart is color-coded to differentiate between emerging markets and developing economies (in blue), global average (in purple), advanced economies excluding the UK (in orange), and the UK (in red).
+
+Here is the underlying data table in markdown format:
+
+```markdown
+| Country/Region | 2023 Growth | 2024 Growth |
+|----------------|-------------|-------------|
+| India          | +6.4%       |             |
+| Philippines    | +5.5%       |             |
+| Indonesia      | +4.9%       |             |
+| China          | +4.8%       |             |
+| Malaysia       | +4.6%       |             |
+| Egypt          | +4.6%       |             |
+| Kazakhstan     | +4.3%       |             |
+| Thailand       | +3.6%       |             |
+| Pakistan       | +3.2%       |             |
+| Nigeria        | +3.0%       |             |
+| Turkey         | +3.0%       |             |
+| World Output   | +3.0%       |             |
+| Saudi Arabia   | +3.0%       |             |
+| World Growth   | +2.4%       |             |
+| South Korea    | +2.1%       |             |
+| Argentina      | +2.0%       |             |
+| Iran           | +2.0%       |             |
+| Spain          | +1.7%       |             |
+| Australia      | +1.6%       |             |
+| Mexico         | +1.6%       |             |
+| Canada         | +1.5%       |             |
+| Brazil         | +1.3%       |             |
+| Japan          | +1.3%       |             |
+| Poland         | +1.3%       |             |
+| South Africa   | +1.2%       |             |
+| United States  | +1.2%       |             |
+| Russia         | +1.2%       |             |
+| France         | +1.1%       |             |
+| Netherlands    | +0.9%       |             |
+| Italy          | +0.7%       |             |
+| Germany        | +0.7%       |             |
+| United Kingdom | +0.1%       |             |
+```
+
+Please note that the 2024 Growth column is empty in the image, and thus it is also left empty in the markdown table.
