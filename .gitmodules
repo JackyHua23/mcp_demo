@@ -1,0 +1,3 @@
+[submodule "ffmpeg-mcp"]
+	path = ffmpeg-mcp
+	url = https://github.com/JackyHua23/ffmpeg-mcp.git
