@@ -370,11 +370,29 @@ function addStreamMessage(content, type, messageId) {
         <div class="message-content">
             <i class="${icon}"></i>
             <div class="text">
-                <p class="stream-content">${content}</p>
-                <div class="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div class="thinking-section">
+                    <div class="thinking-header">
+                        <i class="fas fa-brain"></i>
+                        <span>思考过程</span>
+                        <button class="toggle-thinking" onclick="toggleThinking('${messageId}')">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                    <div class="thinking-content">
+                        <p class="thinking-text">${content}</p>
+                        <div class="typing-indicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="result-section" style="display: none;">
+                    <div class="result-header">
+                        <i class="fas fa-check-circle"></i>
+                        <span>处理结果</span>
+                    </div>
+                    <div class="result-content markdown-content"></div>
                 </div>
             </div>
         </div>
@@ -443,22 +461,22 @@ function handleStreamMessage(data, messageId) {
     switch (data.type) {
         case 'start':
         case 'progress':
-            updateStreamMessage(data.message, messageId);
+            updateThinkingProcess(data.message, messageId);
             break;
         case 'response_start':
-            // 开始接收响应内容，清空当前内容并准备流式显示
-            updateStreamMessage('', messageId);
+            // 开始接收响应内容，创建结果区域
+            createResultSection(messageId);
             break;
         case 'response_chunk':
             // 逐步添加响应内容
-            appendStreamContent(data.content, messageId);
+            appendResultContent(data.content, messageId);
             break;
         case 'response_end':
-            // 响应内容发送完毕，移除打字指示器
-            removeTypingIndicator(messageId);
+            // 响应内容发送完毕，完成处理
+            finalizeMessage(messageId);
             break;
         case 'success':
-            updateStreamMessage(data.message, messageId);
+            updateThinkingProcess(data.message, messageId);
             break;
         case 'error':
             updateStreamMessage(`❌ ${data.message}`, messageId);
@@ -601,4 +619,201 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 更新思考过程
+function updateThinkingProcess(content, messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const thinkingText = messageElement.querySelector('.thinking-text');
+        if (thinkingText) {
+            thinkingText.innerHTML = content.replace(/\n/g, '<br>');
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 创建结果区域
+function createResultSection(messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        // 隐藏思考过程的打字指示器
+        const typingIndicator = messageElement.querySelector('.typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'none';
+        }
+        
+        // 显示结果区域
+        const resultSection = messageElement.querySelector('.result-section');
+        if (resultSection) {
+            resultSection.style.display = 'block';
+        }
+        
+        // 添加结果区域的打字指示器
+        const resultContent = messageElement.querySelector('.result-content');
+        if (resultContent) {
+            resultContent.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 追加结果内容
+function appendResultContent(content, messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const resultContent = messageElement.querySelector('.result-content');
+        
+        if (resultContent) {
+            // 移除打字指示器（如果存在）
+            const typingIndicator = resultContent.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            
+            // 添加内容并渲染markdown
+            const currentContent = resultContent.textContent || '';
+            const newContent = currentContent + content;
+            resultContent.innerHTML = renderMarkdown(newContent);
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 完成消息处理
+function finalizeMessage(messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        // 移除所有打字指示器
+        const typingIndicators = messageElement.querySelectorAll('.typing-indicator');
+        typingIndicators.forEach(indicator => indicator.remove());
+        
+        // 标记思考过程为完成状态
+        const thinkingContent = messageElement.querySelector('.thinking-content');
+        if (thinkingContent) {
+            thinkingContent.classList.add('completed');
+        }
+        
+        // 标记结果内容为完成状态
+        const resultContent = messageElement.querySelector('.result-content');
+        if (resultContent) {
+            resultContent.classList.add('completed');
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 切换思考过程显示/隐藏
+function toggleThinking(messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const thinkingContent = messageElement.querySelector('.thinking-content');
+        const toggleButton = messageElement.querySelector('.toggle-thinking i');
+        
+        if (thinkingContent && toggleButton) {
+            const isVisible = thinkingContent.style.display !== 'none';
+            
+            if (isVisible) {
+                thinkingContent.style.display = 'none';
+                toggleButton.className = 'fas fa-chevron-down';
+            } else {
+                thinkingContent.style.display = 'block';
+                toggleButton.className = 'fas fa-chevron-up';
+            }
+        }
+    }
+}
+
+// 增强的markdown渲染器
+function renderMarkdown(text) {
+    if (!text) return '';
+    
+    // 移除可能存在的think标签
+    text = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+    text = text.replace(/<\/think>/g, '').replace(/<think>/g, '');
+    
+    // 转义HTML特殊字符
+    text = text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;');
+    
+    // 渲染markdown语法
+    text = text
+        // 标题 (支持更多级别)
+        .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+        
+        // 粗体和斜体
+        .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        
+        // 删除线
+        .replace(/~~(.*?)~~/g, '<del>$1</del>')
+        
+        // 代码块 (支持语言标识)
+        .replace(/```(\w+)?\n?([\s\S]*?)```/g, function(match, lang, code) {
+            const language = lang ? ` class="language-${lang}"` : '';
+            return `<pre><code${language}>${code.trim()}</code></pre>`;
+        })
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        
+        // 引用块
+        .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+        
+        // 有序列表
+        .replace(/^\d+\. (.*$)/gm, '<ol-item>$1</ol-item>')
+        
+        // 无序列表
+        .replace(/^[\*\-\+] (.*$)/gm, '<ul-item>$1</ul-item>')
+        
+        // 链接
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        
+        // 图片
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="markdown-image">')
+        
+        // 水平分割线
+        .replace(/^---$/gm, '<hr>')
+        
+        // 表格 (简单支持)
+        .replace(/\|(.+)\|/g, function(match, content) {
+            const cells = content.split('|').map(cell => `<td>${cell.trim()}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+        })
+        
+        // 换行
+        .replace(/\n/g, '<br>');
+    
+    // 包装列表项
+    text = text.replace(/(<ul-item>.*?<\/ul-item>)/g, '<ul><li>$1</li></ul>')
+               .replace(/<ul-item>(.*?)<\/ul-item>/g, '$1');
+    
+    text = text.replace(/(<ol-item>.*?<\/ol-item>)/g, '<ol><li>$1</li></ol>')
+               .replace(/<ol-item>(.*?)<\/ol-item>/g, '$1');
+    
+    // 合并连续的列表
+    text = text.replace(/<\/ul><br><ul>/g, '')
+               .replace(/<\/ol><br><ol>/g, '');
+    
+    // 包装表格
+    text = text.replace(/(<tr>.*?<\/tr>)/g, '<table class="markdown-table">$1</table>');
+    
+    return text;
 } 

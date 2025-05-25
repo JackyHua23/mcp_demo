@@ -66,6 +66,11 @@ async def read_root():
     """返回主页面"""
     return FileResponse("static/index.html")
 
+@app.get("/demo", response_class=HTMLResponse)
+async def demo_separated():
+    """返回AI回复分离演示页面"""
+    return FileResponse("static/demo_separated.html")
+
 @app.get("/api/tools")
 async def get_tools():
     """获取可用的工具列表"""
