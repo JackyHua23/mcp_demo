@@ -203,7 +203,21 @@ async function sendMessage() {
     
     if (!message) return;
     
-    // 添加用户消息到聊天
+    // 构建包含选中文件信息的完整消息
+    let fullMessage = message;
+    
+    // 如果有选中的文件，添加文件信息到消息中
+    if (selectedFiles.size > 0) {
+        const selectedFilePaths = Array.from(selectedFiles);
+        const fileInfo = selectedFilePaths.map(path => {
+            const fileName = selectedFileNames.get(path) || path;
+            return `文件路径: ${path} (文件名: ${fileName})`;
+        }).join('\n');
+        
+        fullMessage = `${message}\n\n当前选中的文件:\n${fileInfo}`;
+    }
+    
+    // 添加用户消息到聊天（只显示原始消息，不显示文件路径）
     addMessage(message, 'user');
     input.value = '';
     
@@ -215,7 +229,7 @@ async function sendMessage() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message: fullMessage })
         });
         
         const data = await response.json();
