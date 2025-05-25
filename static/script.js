@@ -221,10 +221,12 @@ async function sendMessage() {
     addMessage(message, 'user');
     input.value = '';
     
-    showLoading(true);
+    // 创建一个临时的助手消息用于显示流式内容
+    const tempMessageId = 'temp-' + Date.now();
+    addStreamMessage('正在处理...', 'assistant', tempMessageId);
     
     try {
-        const response = await fetch('/api/process', {
+        const response = await fetch('/api/process-stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -232,19 +234,105 @@ async function sendMessage() {
             body: JSON.stringify({ message: fullMessage })
         });
         
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-        if (data.success) {
-            addMessage(data.response, 'assistant');
-        } else {
-            addMessage('处理请求时发生错误', 'assistant');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // 保留不完整的行
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        handleStreamMessage(data, tempMessageId);
+                    } catch (e) {
+                        console.error('解析流数据失败:', e);
+                    }
+                }
+            }
         }
     } catch (error) {
         console.error('发送消息失败:', error);
-        addMessage('发送消息失败，请检查网络连接', 'assistant');
+        updateStreamMessage('发送消息失败，请检查网络连接', tempMessageId);
     }
     
-    showLoading(false);
+    refreshFiles(); // 刷新文件列表，可能有新的输出文件
+}
+
+// 直接发送消息（用于快速操作）
+async function sendMessageDirect(message) {
+    // 构建包含选中文件信息的完整消息
+    let fullMessage = message;
+    
+    // 如果有选中的文件，添加文件信息到消息中
+    if (selectedFiles.size > 0) {
+        const selectedFilePaths = Array.from(selectedFiles);
+        const fileInfo = selectedFilePaths.map(path => {
+            const fileName = selectedFileNames.get(path) || path;
+            return `文件路径: ${path} (文件名: ${fileName})`;
+        }).join('\n');
+        
+        fullMessage = `${message}\n\n当前选中的文件:\n${fileInfo}`;
+    }
+    
+    // 添加用户消息到聊天
+    addMessage(message, 'user');
+    
+    // 创建一个临时的助手消息用于显示流式内容
+    const tempMessageId = 'temp-' + Date.now();
+    addStreamMessage('正在处理...', 'assistant', tempMessageId);
+    
+    try {
+        const response = await fetch('/api/process-stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: fullMessage })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // 保留不完整的行
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        handleStreamMessage(data, tempMessageId);
+                    } catch (e) {
+                        console.error('解析流数据失败:', e);
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        updateStreamMessage('发送消息失败，请检查网络连接', tempMessageId);
+    }
+    
     refreshFiles(); // 刷新文件列表，可能有新的输出文件
 }
 
@@ -267,6 +355,118 @@ function addMessage(content, type) {
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 添加流式消息到聊天
+function addStreamMessage(content, type, messageId) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.id = messageId;
+    
+    const icon = type === 'user' ? 'fas fa-user' : 'fas fa-robot';
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <i class="${icon}"></i>
+            <div class="text">
+                <p class="stream-content">${content}</p>
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 更新流式消息内容
+function updateStreamMessage(content, messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const contentElement = messageElement.querySelector('.stream-content');
+        const typingIndicator = messageElement.querySelector('.typing-indicator');
+        
+        if (contentElement) {
+            contentElement.innerHTML = content.replace(/\n/g, '<br>');
+        }
+        
+        // 移除打字指示器
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 追加流式内容
+function appendStreamContent(content, messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const contentElement = messageElement.querySelector('.stream-content');
+        
+        if (contentElement) {
+            const currentContent = contentElement.innerHTML;
+            contentElement.innerHTML = currentContent + content.replace(/\n/g, '<br>');
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 移除打字指示器
+function removeTypingIndicator(messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const typingIndicator = messageElement.querySelector('.typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+        
+        // 标记流式内容为完成状态，移除光标效果
+        const contentElement = messageElement.querySelector('.stream-content');
+        if (contentElement) {
+            contentElement.classList.add('completed');
+        }
+    }
+}
+
+// 处理流式消息
+function handleStreamMessage(data, messageId) {
+    switch (data.type) {
+        case 'start':
+        case 'progress':
+            updateStreamMessage(data.message, messageId);
+            break;
+        case 'response_start':
+            // 开始接收响应内容，清空当前内容并准备流式显示
+            updateStreamMessage('', messageId);
+            break;
+        case 'response_chunk':
+            // 逐步添加响应内容
+            appendStreamContent(data.content, messageId);
+            break;
+        case 'response_end':
+            // 响应内容发送完毕，移除打字指示器
+            removeTypingIndicator(messageId);
+            break;
+        case 'success':
+            updateStreamMessage(data.message, messageId);
+            break;
+        case 'error':
+            updateStreamMessage(`❌ ${data.message}`, messageId);
+            break;
+        case 'end':
+            // 处理结束，可以在这里做一些清理工作
+            break;
+    }
 }
 
 // 快速操作
@@ -318,9 +518,8 @@ async function quickAction(action) {
             return;
     }
     
-    // 设置消息到输入框并发送
-    document.getElementById('messageInput').value = message;
-    sendMessage();
+    // 直接发送消息，不显示在输入框中
+    sendMessageDirect(message);
 }
 
 // 下载文件

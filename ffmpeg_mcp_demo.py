@@ -73,7 +73,7 @@ class FFmpegMCPClient:
                 "7. 视频缩放\n"
                 "8. 提取视频帧为图片\n"
                 "9. 提取视频中的音频\n"
-                "请根据用户的需求选择合适的工具并执行相应操作。\n"
+                "请根据用户的需求选择合适的工具并执行相应操作,在你对视频进行操作之前请获取视频信息再进行。\n"
                 f"上传文件的绝对路径在: {uploads_dir}\n"
                 f"输出文件的绝对路径在: {outputs_dir}\n"
                 "重要提示：\n"
@@ -81,6 +81,11 @@ class FFmpegMCPClient:
                 "- 如果用户提到'input.mp4'等通用文件名，请替换为实际选中的文件路径\n"
                 "- 始终使用完整的绝对路径来访问文件\n"
                 "- 输出文件应保存到outputs目录中\n"
+                "响应格式要求：\n"
+                "- 请详细说明你调用了哪些工具\n"
+                "- 说明每个工具的具体参数\n"
+                "- 报告执行结果和生成的文件路径\n"
+                "- 如果有FFmpeg命令执行，请说明具体的命令内容\n"
             )
         )
     
@@ -100,6 +105,43 @@ class FFmpegMCPClient:
                 return response
         except Exception as e:
             logger.error(f"处理请求时发生错误: {e}")
+            return f"错误: {e}"
+    
+    async def process_video_request_with_details(self, user_input, progress_callback=None):
+        """
+        处理视频相关请求并返回详细的调用过程
+        
+        Args:
+            user_input: 用户输入的请求
+            progress_callback: 进度回调函数
+            
+        Returns:
+            处理结果
+        """
+        try:
+            if progress_callback:
+                await progress_callback("🔍 正在分析您的请求...")
+            
+            async with BridgeManager(self.config) as bridge:
+                if progress_callback:
+                    await progress_callback("🤖 正在调用AI助手分析请求...")
+                
+                # 这里我们可以添加更详细的日志记录
+                logger.info(f"开始处理请求: {user_input}")
+                
+                if progress_callback:
+                    await progress_callback("⚙️ 正在执行FFmpeg工具调用...")
+                
+                response = await bridge.process_message(user_input)
+                
+                if progress_callback:
+                    await progress_callback("✅ 处理完成，正在整理结果...")
+                
+                return response
+        except Exception as e:
+            logger.error(f"处理请求时发生错误: {e}")
+            if progress_callback:
+                await progress_callback(f"❌ 处理失败: {str(e)}")
             return f"错误: {e}"
     
     def get_available_tools(self):

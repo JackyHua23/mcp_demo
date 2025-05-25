@@ -568,6 +568,89 @@ body {
     }
 }
 
+/* 打字指示器样式 */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background: #a0aec0;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 流式消息样式 */
+.stream-content {
+    display: inline;
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* 流式内容淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 流式内容容器 */
+.message .text {
+    position: relative;
+}
+
+/* 流式内容光标效果 */
+.stream-content::after {
+    content: '';
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: #667eea;
+    margin-left: 2px;
+    animation: blink 1s infinite;
+    vertical-align: text-bottom;
+}
+
+/* 当内容完成时移除光标 */
+.stream-content.completed::after {
+    display: none;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
+
 /* 滚动条样式 */
 ::-webkit-scrollbar {
     width: 8px;

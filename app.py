@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import logging
-from typing import Optional, List
+from typing import Optional, List, AsyncGenerator
 import uvicorn
+import json
+import asyncio
 
 # 导入我们的 FFmpeg MCP 客户端
 from ffmpeg_mcp_demo import FFmpegMCPClient
@@ -83,6 +85,94 @@ async def process_video_request(request: VideoRequest):
     except Exception as e:
         logger.error(f"处理请求失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/process-stream")
+async def process_video_request_stream(request: VideoRequest):
+    """流式处理视频相关请求"""
+    
+    # 创建一个队列来存储进度消息
+    progress_queue = asyncio.Queue()
+    
+    async def progress_callback(message):
+        await progress_queue.put(message)
+    
+    async def generate_stream():
+        try:
+            # 发送开始处理的消息
+            start_msg = "🚀 开始处理您的请求..."
+            yield f"data: {json.dumps({'type': 'start', 'message': start_msg})}\n\n"
+            await asyncio.sleep(0.1)
+            
+            # 启动处理任务
+            process_task = asyncio.create_task(
+                ffmpeg_client.process_video_request_with_details(
+                    request.message, 
+                    progress_callback
+                )
+            )
+            
+            # 监听进度消息
+            while not process_task.done():
+                try:
+                    # 等待进度消息，设置超时避免阻塞
+                    message = await asyncio.wait_for(
+                        progress_queue.get(), 
+                        timeout=0.1
+                    )
+                    progress_data = {'type': 'progress', 'message': message}
+                    yield f"data: {json.dumps(progress_data)}\n\n"
+                except asyncio.TimeoutError:
+                    # 没有新的进度消息，继续等待
+                    continue
+            
+            # 获取最终结果
+            response = await process_task
+            
+            # 处理队列中剩余的消息
+            while not progress_queue.empty():
+                message = await progress_queue.get()
+                progress_data = {'type': 'progress', 'message': message}
+                yield f"data: {json.dumps(progress_data)}\n\n"
+            
+            # 开始流式发送最终响应
+            yield f"data: {json.dumps({'type': 'response_start'})}\n\n"
+            
+            # 将响应按句子分割并逐步发送
+            sentences = response.split('。')
+            for i, sentence in enumerate(sentences):
+                if sentence.strip():
+                    # 添加句号（除了最后一句）
+                    if i < len(sentences) - 1:
+                        sentence += '。'
+                    
+                    stream_data = {
+                        'type': 'response_chunk', 
+                        'content': sentence
+                    }
+                    yield f"data: {json.dumps(stream_data)}\n\n"
+                    await asyncio.sleep(0.3)  # 控制显示速度
+            
+            # 发送完成消息
+            yield f"data: {json.dumps({'type': 'response_end'})}\n\n"
+            yield f"data: {json.dumps({'type': 'end'})}\n\n"
+            
+        except Exception as e:
+            logger.error(f"流式处理请求失败: {e}")
+            error_msg = f"处理失败: {str(e)}"
+            error_data = {'type': 'error', 'message': error_msg}
+            yield f"data: {json.dumps(error_data)}\n\n"
+            yield f"data: {json.dumps({'type': 'end'})}\n\n"
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "text/event-stream"
+        }
+    )
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
