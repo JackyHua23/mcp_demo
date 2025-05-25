@@ -151,16 +151,24 @@ function updateFileList(containerId, files, fileType) {
         // 存储路径到文件名的映射
         selectedFileNames.set(file.path, file.name);
         
+        // 检查是否是媒体文件
+        const isMediaFile = isVideoOrAudioFile(file.name);
+        
         fileItem.innerHTML = `
             <div class="file-info">
                 <div class="file-name">${file.name}</div>
                 <div class="file-size">${formatFileSize(file.size)}</div>
             </div>
             <div class="file-actions">
-                <button class="btn btn-outline" onclick="downloadFile('${fileType}', '${file.name}'); event.stopPropagation();">
+                ${isMediaFile ? `
+                    <button class="btn btn-preview" onclick="previewMedia('${fileType}', '${file.name}', '${file.path}'); event.stopPropagation();" title="预览">
+                        <i class="fas fa-play"></i>
+                    </button>
+                ` : ''}
+                <button class="btn btn-outline" onclick="downloadFile('${fileType}', '${file.name}'); event.stopPropagation();" title="下载">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="btn btn-danger" onclick="deleteFile('${fileType}', '${file.name}'); event.stopPropagation();">
+                <button class="btn btn-danger" onclick="deleteFile('${fileType}', '${file.name}'); event.stopPropagation();" title="删除">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -862,4 +870,191 @@ function renderMarkdown(text) {
     text = text.replace(/(<tr>.*?<\/tr>)/g, '<table class="markdown-table">$1</table>');
     
     return text;
-} 
+}
+
+// 检查是否是视频或音频文件
+function isVideoOrAudioFile(filename) {
+    const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp'];
+    const audioExtensions = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', '.wma'];
+    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return videoExtensions.includes(extension) || audioExtensions.includes(extension);
+}
+
+// 检查是否是视频文件
+function isVideoFile(filename) {
+    const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp'];
+    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return videoExtensions.includes(extension);
+}
+
+// 检查是否是音频文件
+function isAudioFile(filename) {
+    const audioExtensions = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', '.wma'];
+    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return audioExtensions.includes(extension);
+}
+
+// 预览媒体文件
+function previewMedia(fileType, filename, filePath) {
+    try {
+        // 直接显示预览模态框，不获取额外信息
+        showMediaPreview(fileType, filename, filePath);
+    } catch (error) {
+        console.error('预览媒体失败:', error);
+        showNotification('预览媒体失败: ' + error.message, 'error');
+    }
+}
+
+// 显示媒体预览模态框
+function showMediaPreview(fileType, filename, filePath) {
+    const modal = document.getElementById('mediaPreviewModal');
+    const title = document.getElementById('previewTitle');
+    const mediaContainer = document.getElementById('mediaContainer');
+    const mediaInfoContainer = document.getElementById('mediaInfo');
+    const downloadBtn = document.getElementById('downloadPreviewBtn');
+    
+    // 设置标题
+    title.textContent = `预览: ${filename}`;
+    
+    // 清空容器
+    mediaContainer.innerHTML = '';
+    mediaInfoContainer.innerHTML = '';
+    
+    // 创建媒体元素
+    const mediaUrl = `/api/media/${fileType}/${encodeURIComponent(filename)}`;
+    
+    if (isVideoFile(filename)) {
+        // 创建视频元素
+        const video = document.createElement('video');
+        video.src = mediaUrl;
+        video.controls = true;
+        video.preload = 'metadata';
+        video.style.maxWidth = '100%';
+        video.style.maxHeight = '400px';
+        
+        // 添加错误处理
+        video.onerror = function() {
+            mediaContainer.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #718096;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>无法加载视频文件</p>
+                    <p style="font-size: 0.9rem;">可能是格式不支持或文件损坏</p>
+                </div>
+            `;
+        };
+        
+        mediaContainer.appendChild(video);
+    } else if (isAudioFile(filename)) {
+        // 创建音频元素
+        const audio = document.createElement('audio');
+        audio.src = mediaUrl;
+        audio.controls = true;
+        audio.preload = 'metadata';
+        audio.style.width = '100%';
+        
+        // 添加错误处理
+        audio.onerror = function() {
+            mediaContainer.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #718096;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>无法加载音频文件</p>
+                    <p style="font-size: 0.9rem;">可能是格式不支持或文件损坏</p>
+                </div>
+            `;
+        };
+        
+        // 为音频添加可视化背景
+        const audioWrapper = document.createElement('div');
+        audioWrapper.style.cssText = `
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        `;
+        
+        const audioIcon = document.createElement('div');
+        audioIcon.innerHTML = `
+            <i class="fas fa-music" style="font-size: 3rem; color: white; margin-bottom: 20px;"></i>
+            <h4 style="color: white; margin-bottom: 20px;">${filename}</h4>
+        `;
+        
+        audioWrapper.appendChild(audioIcon);
+        audioWrapper.appendChild(audio);
+        mediaContainer.appendChild(audioWrapper);
+    }
+    
+    // 显示基本文件信息
+    mediaInfoContainer.innerHTML = `
+        <h4><i class="fas fa-info-circle"></i> 文件信息</h4>
+        <div class="info-item">
+            <span class="info-label">文件名</span>
+            <span class="info-value">${filename}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">文件类型</span>
+            <span class="info-value">${isVideoFile(filename) ? '视频文件' : '音频文件'}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">文件路径</span>
+            <span class="info-value">${filePath}</span>
+        </div>
+    `;
+    
+    // 设置下载按钮
+    downloadBtn.onclick = () => downloadFile(fileType, filename);
+    
+    // 显示模态框
+    modal.classList.add('show');
+    
+    // 添加ESC键关闭功能
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeMediaPreview();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+// 关闭媒体预览
+function closeMediaPreview() {
+    const modal = document.getElementById('mediaPreviewModal');
+    const mediaContainer = document.getElementById('mediaContainer');
+    
+    // 停止所有媒体播放
+    const videos = mediaContainer.querySelectorAll('video');
+    const audios = mediaContainer.querySelectorAll('audio');
+    
+    videos.forEach(video => {
+        video.pause();
+        video.src = '';
+    });
+    
+    audios.forEach(audio => {
+        audio.pause();
+        audio.src = '';
+    });
+    
+    // 隐藏模态框
+    modal.classList.remove('show');
+    
+    // 清空容器
+    setTimeout(() => {
+        mediaContainer.innerHTML = '';
+        document.getElementById('mediaInfo').innerHTML = '';
+    }, 300);
+}
+
+
+
+// 修复刷新功能 - 确保按钮点击事件正确绑定
+document.addEventListener('DOMContentLoaded', function() {
+    // 确保刷新按钮事件正确绑定
+    const refreshButton = document.querySelector('button[onclick="refreshFiles()"]');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            refreshFiles();
+        });
+    }
+}); 

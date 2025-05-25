@@ -153,6 +153,30 @@
     <!-- 通知容器 -->
     <div class="notification-container" id="notificationContainer"></div>
 
+    <!-- 媒体预览模态框 -->
+    <div class="modal-overlay" id="mediaPreviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="previewTitle">媒体预览</h3>
+                <button class="modal-close" onclick="closeMediaPreview()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="mediaContainer">
+                    <!-- 视频或音频元素将在这里动态插入 -->
+                </div>
+                <div class="media-info" id="mediaInfo">
+                    <!-- 媒体信息将在这里显示 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMediaPreview()">关闭</button>
+                <button class="btn btn-primary" id="downloadPreviewBtn">下载</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/script.js"></script>
 </body>
 </html> 

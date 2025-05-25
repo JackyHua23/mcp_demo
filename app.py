@@ -316,5 +316,47 @@ async def delete_file(file_type: str, filename: str):
         logger.error(f"文件删除失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/media/{file_type}/{filename}")
+async def stream_media(file_type: str, filename: str):
+    """流式传输媒体文件，支持范围请求"""
+    try:
+        if file_type == "upload":
+            file_path = os.path.join("uploads", filename)
+        elif file_type == "output":
+            file_path = os.path.join("outputs", filename)
+        else:
+            raise HTTPException(status_code=400, detail="无效的文件类型")
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="文件不存在")
+        
+        # 获取文件大小
+        file_size = os.path.getsize(file_path)
+        
+        # 确定MIME类型
+        import mimetypes
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if not mime_type:
+            if filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm')):
+                mime_type = 'video/mp4'
+            elif filename.lower().endswith(('.mp3', '.wav', '.aac', '.flac', '.ogg')):
+                mime_type = 'audio/mpeg'
+            else:
+                mime_type = 'application/octet-stream'
+        
+        # 返回文件响应，支持范围请求
+        return FileResponse(
+            file_path,
+            media_type=mime_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+    except Exception as e:
+        logger.error(f"媒体文件流传输失败: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True) 
