@@ -1,382 +1,257 @@
-# MCP Demo - 基于 NIM 构建的多模态 AI-Agent
+# MCP Demo - 基于 NVIDIA NIM 的智能视频处理 AI-Agent
 
-这是一个基于 MCP (Model Context Protocol) 的多模态 AI-Agent 演示项目，集成了 FFmpeg 视频处理、Web 搜索等功能，提供命令行和 Web 两种交互方式。
+<div align="center">
 
-## 🌟 功能特性
+![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)
+![MCP](https://img.shields.io/badge/MCP-1.6+-orange.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-### 🎯 核心功能
-- **智能对话处理**: 使用自然语言描述视频处理需求
-- **FFmpeg 视频处理**: 完整的视频编辑工具链
-- **Web 搜索**: 实时网络信息检索
-- **多模态交互**: 支持文本、图像、视频等多种媒体格式
-- **现代化 Web 界面**: 直观的图形化操作体验
+一个基于 MCP (Model Context Protocol) 的智能视频处理 AI-Agent，集成 NVIDIA NIM、FFmpeg 和 Web 搜索功能，提供自然语言视频编辑体验。
+
+[🚀 快速开始](#-快速开始) • [📖 使用指南](#-使用指南) • [🛠️ API 文档](#️-api-文档) • [🤝 贡献指南](#-贡献指南)
+
+</div>
+
+## ✨ 项目特色
+
+### 🎯 核心亮点
+- **🤖 自然语言交互**: 用中文描述需求，AI 自动选择合适的工具执行
+- **🎬 专业视频处理**: 基于 FFmpeg 的完整视频编辑工具链
+- **🌐 现代化 Web 界面**: 响应式设计，支持拖拽上传和实时预览
+- **⚡ 流式响应**: 实时显示处理进度和 AI 思考过程
+- **🔍 智能搜索**: 集成 Tavily 实时网络信息检索
+- **📱 多模态支持**: 文本、图像、视频等多种媒体格式
 
 ### 🛠️ 支持的视频操作
-- 📹 获取视频信息（时长、分辨率、编码等）
-- ✂️ 视频剪切（指定时间段）
-- 🔗 视频合并（多个文件拼接）
-- 📐 视频缩放（调整分辨率）
-- 🎭 视频叠加（画中画效果）
-- 🎵 音频提取
-- 🖼️ 帧提取（生成图片）
-- ▶️ 视频播放
+| 功能 | 描述 | 示例命令 |
+|------|------|----------|
+| 📹 **视频信息** | 获取时长、分辨率、编码等详细信息 | "获取 video.mp4 的详细信息" |
+| ✂️ **智能剪切** | 按时间段精确剪切视频片段 | "从第30秒开始剪切1分钟" |
+| 🔗 **无缝合并** | 多个视频文件智能拼接 | "将这三个视频合并成一个" |
+| 📐 **分辨率调整** | 视频缩放和分辨率转换 | "将视频调整为1080p" |
+| 🎭 **画中画效果** | 视频叠加和画中画制作 | "在主视频右上角添加小窗口" |
+| 🎵 **音频提取** | 从视频中提取高质量音频 | "提取视频中的背景音乐" |
+| 🖼️ **帧提取** | 按帧率提取视频截图 | "每秒提取一张图片" |
+| ▶️ **预览播放** | 内置视频播放器预览 | "播放处理后的视频" |
 
-## 📁 项目结构
+## 📁 项目架构
 
-```
+```text
 mcp_demo/
-├── ffmpeg-mcp/                 # FFmpeg MCP 服务器子模块
-│   ├── src/ffmpeg_mcp/
-│   │   ├── server.py          # MCP 服务器主文件
-│   │   ├── cut_video.py       # 视频处理核心逻辑
-│   │   └── ...
-│   └── pyproject.toml
-├── src/                       # 源代码目录
-├── static/                    # Web 静态文件
-│   ├── index.html            # 主页面
-│   ├── style.css             # 样式文件
-│   └── script.js             # JavaScript 逻辑
-├── uploads/                   # 上传文件目录
-├── outputs/                   # 输出文件目录
-├── zh_data/                   # 中文数据
-├── app.py                     # FastAPI Web 应用
-├── demo_web.py               # Web 演示
-├── start_web.py              # Web 启动脚本
-├── mcp_demo.py               # 基础 MCP 演示
-├── ffmpeg_mcp_demo.py        # FFmpeg MCP 演示
-├── ffmpeg_mcp_client.py      # 简化的客户端接口
-├── ffmpeg_mcp_config.py      # 配置管理
-├── web_search.py             # Web 搜索功能
-├── install.sh                # 自动安装脚本
-├── env.example               # 环境变量配置模板
-├── pyproject.toml            # 项目配置
-├── uv.lock                   # 依赖锁定文件
-└── README.md                 # 本文档
+├── 🌐 Web 前端层
+│   ├── static/
+│   │   ├── index.html              # 主界面 - 现代化响应式设计
+│   │   ├── demo_separated.html     # AI 对话演示页面
+│   │   ├── test_stream.html        # 流式响应测试页面
+│   │   ├── style.css               # 样式文件 - CSS Grid + Flexbox
+│   │   └── script.js               # 前端逻辑 - 原生 ES6+
+│   └── app.py                      # FastAPI Web 服务器
+│
+├── 🤖 AI 处理层
+│   ├── ffmpeg_mcp_demo.py          # MCP 客户端核心
+│   ├── ffmpeg_mcp_config.py        # 配置管理
+│   └── demo_web.py                 # Web 演示脚本
+│
+├── 🎬 视频处理层 (子模块)
+│   └── ffmpeg-mcp/                 # FFmpeg MCP 服务器
+│       └── src/ffmpeg_mcp/
+│           ├── server.py           # MCP 协议服务器
+│           ├── cut_video.py        # 视频处理核心算法
+│           ├── ffmpeg.py           # FFmpeg 命令封装
+│           ├── typedef.py          # 类型定义和数据结构
+│           └── utils.py            # 工具函数库
+│
+├── 📁 数据存储层
+│   ├── uploads/                    # 用户上传文件
+│   └── outputs/                    # 处理结果输出
+│
+└── ⚙️ 配置文件
+    ├── pyproject.toml              # 项目依赖和配置
+    ├── uv.lock                     # 依赖版本锁定
+    ├── .gitmodules                 # Git 子模块配置
+    └── env.example                 # 环境变量模板
 ```
 
 ## 🚀 快速开始
 
-### 1. 环境准备
+### 📋 环境要求
 
-确保已安装以下工具：
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) (推荐的 Python 包管理器)
-- Git
+- **Python**: 3.12+ (推荐 3.12.7)
+- **包管理器**: [uv](https://docs.astral.sh/uv/) (现代化 Python 包管理)
+- **系统工具**: Git, FFmpeg
+- **API 密钥**: NVIDIA API Key (必需), Tavily API Key (可选)
 
-### 2. 克隆项目
+### 🔧 安装步骤
 
+#### 1️⃣ 克隆项目
 ```bash
+# 克隆主项目
 git clone https://github.com/JackyHua23/mcp_demo.git
 cd mcp_demo
 
-# 拉取子模块
+# 初始化子模块
 git submodule update --init --recursive
 ```
 
-### 3. 安装依赖
-
-#### 方式1：使用安装脚本（推荐）
+#### 2️⃣ 安装依赖
 ```bash
-# 运行自动安装脚本
-./install.sh
-```
-
-#### 方式2：手动安装
-使用 `uv sync` 统一管理所有依赖：
-
-```bash
-# 安装主项目依赖
+# 使用 uv 安装主项目依赖
 uv sync
 
-# 安装 ffmpeg-mcp 子模块依赖
+# 安装 FFmpeg MCP 子模块依赖
 cd ffmpeg-mcp
 uv sync
 cd ..
 ```
 
-### 4. 配置环境变量
-
-#### 方式1：使用配置文件
+#### 3️⃣ 配置环境变量
 ```bash
 # 复制环境变量模板
 cp env.example .env
 
-# 编辑 .env 文件，填入实际的 API 密钥
+# 编辑配置文件
 nano .env
 ```
 
-#### 方式2：直接设置环境变量
+**环境变量配置：**
 ```bash
-# NVIDIA API 密钥（必需）
-export NVIDIA_API_KEY="your_nvidia_api_key_here"
+# NVIDIA API 密钥 (必需) - 获取地址: https://build.nvidia.com/
+NVIDIA_API_KEY="your_nvidia_api_key_here"
 
-# Tavily API 密钥（Web 搜索功能，可选）
-export TAVILY_API_KEY="your_tavily_api_key_here"
+# Tavily API 密钥 (可选) - 获取地址: https://tavily.com/
+TAVILY_API_KEY="your_tavily_api_key_here"
 ```
 
-**获取 API 密钥：**
-- NVIDIA API 密钥：https://build.nvidia.com/
-- Tavily API 密钥：https://tavily.com/
-
-### 5. 运行项目
-
-#### 方式1：Web 界面（推荐）
+#### 4️⃣ 启动应用
 ```bash
-# 使用启动脚本
-python start_web.py
+# 方式1：使用演示脚本启动 (推荐)
+uv run python demo_web.py
 
-# 或直接启动
+# 方式2：直接启动 FastAPI 应用
 uv run python app.py
+
+# 方式3：使用 uvicorn 启动 (开发模式)
+uv run uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-然后打开浏览器访问：http://localhost:8000
+🎉 **访问应用**: http://localhost:8000
 
-#### 方式2：命令行演示
-```bash
-# 基础 MCP 演示
-uv run python mcp_demo.py
+## 💻 使用指南
 
-# FFmpeg 视频处理演示
-uv run python ffmpeg_mcp_demo.py
+### 🌐 Web 界面操作
 
-# Web 搜索演示
-uv run python web_search.py
+#### 📤 文件上传
+1. **拖拽上传**: 将视频文件拖拽到左侧上传区域
+2. **点击上传**: 点击上传按钮选择文件
+3. **格式支持**: MP4, AVI, MOV, MKV, WMV, FLV, WebM
+
+#### 💬 智能对话
+在右侧聊天区域输入自然语言指令：
+
+```text
+✅ 支持的指令示例：
+• "获取当前视频的详细信息"
+• "从第30秒开始剪切1分钟的内容"
+• "将视频分辨率调整为1920x1080"
+• "提取视频中的音频保存为MP3格式"
+• "在视频右上角添加水印效果"
 ```
 
-## 💻 使用方法
+#### ⚡ 快速操作
+使用预设按钮快速执行常用操作：
+- 🔍 **获取信息** - 查看视频详细参数
+- ✂️ **智能剪切** - 快速剪切视频片段
+- 🎵 **提取音频** - 导出音频文件
+- 📐 **调整尺寸** - 修改视频分辨率
 
-### Web 界面使用
+### 🖥️ 命令行使用
 
-1. **文件上传**: 拖拽视频文件到左侧上传区域
-2. **智能对话**: 在右侧聊天区域用自然语言描述需求
-3. **快速操作**: 使用预设的操作按钮快速处理视频
-4. **文件管理**: 查看、下载、删除上传和输出文件
-
-### 命令行使用
-
-#### 简化客户端接口
+#### 基础示例
 ```python
 import asyncio
-from ffmpeg_mcp_client import SimpleFFmpegMCPClient
+from ffmpeg_mcp_demo import FFmpegMCPClient
 
 async def main():
-    client = SimpleFFmpegMCPClient()
+    client = FFmpegMCPClient()
     
-    # 获取视频信息
-    result = await client.get_info("video.mp4")
-    print(result)
-    
-    # 剪切视频
-    result = await client.clip("video.mp4", start="00:01:00", duration="30")
-    print(result)
-    
-    # 合并视频
-    result = await client.concat(["video1.mp4", "video2.mp4"], "output.mp4")
-    print(result)
+    # 自然语言处理
+    response = await client.process_video_request(
+        "将 uploads/video.mp4 从第10秒开始剪切30秒"
+    )
+    print(response)
 
 asyncio.run(main())
 ```
 
-#### 自然语言交互示例
-```python
-# 使用自然语言描述需求
-await client.execute("将 video.mp4 从第10秒开始剪切30秒的内容")
-await client.execute("将 video1.mp4 和 video2.mp4 合并成 output.mp4")
-await client.execute("从 video.mp4 中提取音频保存为 audio.mp3")
-await client.execute("将 video.mp4 缩放到 1920x1080 分辨率")
-```
-
-## 🔧 配置选项
-
-### 自定义配置
+#### 高级配置
 ```python
 from ffmpeg_mcp_config import FFmpegMCPConfig
-from ffmpeg_mcp_client import SimpleFFmpegMCPClient
+from ffmpeg_mcp_demo import FFmpegMCPClient
 
-# 创建自定义配置
+# 自定义配置
 config = FFmpegMCPConfig(
-    api_key="your_api_key",
+    api_key="your_nvidia_api_key",
     model="nvidia/llama-3.1-nemotron-ultra-253b-v1",
-    base_url="https://integrate.api.nvidia.com/v1",
-    ffmpeg_mcp_path="/path/to/ffmpeg-mcp"
+    base_url="https://integrate.api.nvidia.com/v1"
 )
 
-# 使用自定义配置创建客户端
-client = SimpleFFmpegMCPClient(config)
+client = FFmpegMCPClient(
+    api_key=config.api_key,
+    model=config.model,
+    base_url=config.base_url
+)
 ```
 
-### Web 应用配置
-在 `app.py` 中可以修改：
-- 服务器端口（默认 8000）
-- 文件上传限制
-- API 密钥配置
-- CORS 设置
+## 🛠️ API 文档
 
-## 🎯 技术栈
+### 🌐 Web API 端点
 
-### 后端
-- **FastAPI**: 现代化的 Python Web 框架
-- **MCP**: Model Context Protocol 协议
-- **LangChain**: AI 应用开发框架
-- **NVIDIA NIM**: AI 模型推理服务
-- **FFmpeg**: 视频处理工具
+| 方法 | 端点 | 描述 | 参数 |
+|------|------|------|------|
+| `GET` | `/` | 主页面 | - |
+| `GET` | `/demo` | AI 对话演示页面 | - |
+| `POST` | `/api/upload` | 文件上传 | `file: UploadFile` |
+| `GET` | `/api/files` | 获取文件列表 | - |
+| `POST` | `/api/process` | 处理视频请求 | `message: str, video_path?: str` |
+| `POST` | `/api/process-stream` | 流式处理请求 | `message: str, video_path?: str` |
+| `GET` | `/api/tools` | 获取可用工具 | - |
+| `GET` | `/api/download/{type}/{filename}` | 文件下载 | `type: str, filename: str` |
+| `DELETE` | `/api/files/{type}/{filename}` | 文件删除 | `type: str, filename: str` |
 
-### 前端
-- **HTML5**: 语义化标记
-- **CSS3**: 现代化样式（Grid、Flexbox、动画）
-- **JavaScript ES6+**: 原生 JavaScript
-- **Font Awesome**: 图标库
+### 🎬 FFmpeg MCP 工具
 
-### 包管理
-- **uv**: 快速的 Python 包管理器和项目管理工具
-- **pyproject.toml**: 现代 Python 项目配置
+| 工具名称 | 功能描述 | 参数说明 |
+|----------|----------|----------|
+| `find_video_path` | 智能查找视频文件 | `root_path`, `video_name` |
+| `get_video_info` | 获取视频详细信息 | `video_path` |
+| `clip_video` | 精确剪切视频片段 | `video_path`, `start`, `end/duration`, `output_path?` |
+| `concat_videos` | 无缝合并多个视频 | `input_files[]`, `output_path?`, `fast?` |
+| `scale_video` | 调整视频分辨率 | `video_path`, `width`, `height`, `output_path?` |
+| `overlay_video` | 视频叠加效果 | `background_video`, `overlay_video`, `position?`, `dx?`, `dy?` |
+| `extract_audio_from_video` | 提取音频轨道 | `video_path`, `output_path?`, `audio_format?` |
+| `extract_frames_from_video` | 提取视频帧 | `video_path`, `fps?`, `output_folder?`, `format?` |
+| `play_video` | 播放视频预览 | `video_path`, `speed?`, `loop?` |
 
-## 📚 API 文档
+## 🎯 技术栈详解
 
-### Web API 端点
-- `GET /` - 主页面
-- `POST /api/upload` - 文件上传
-- `GET /api/files` - 获取文件列表
-- `POST /api/process` - 处理视频请求
-- `GET /api/tools` - 获取可用工具
-- `GET /api/download/{type}/{filename}` - 文件下载
-- `DELETE /api/files/{type}/{filename}` - 文件删除
+### 🔧 后端技术
+- **FastAPI**: 高性能异步 Web 框架，自动生成 API 文档
+- **MCP**: Model Context Protocol，AI 工具调用标准协议
+- **NVIDIA NIM**: 企业级 AI 推理服务，支持 Llama 3.1 Nemotron
+- **FFmpeg**: 业界标准的多媒体处理工具
+- **uv**: 下一代 Python 包管理器，比 pip 快 10-100 倍
 
-启动应用后访问 API 文档：http://localhost:8000/docs
+### 🎨 前端技术
+- **HTML5**: 语义化标记，支持拖拽 API
+- **CSS3**: 现代化样式，Grid + Flexbox 布局，CSS 动画
+- **JavaScript ES6+**: 原生 JavaScript，Fetch API，WebSocket
+- **Font Awesome**: 矢量图标库
 
-### FFmpeg MCP 工具
+### 📦 依赖管理
+- **pyproject.toml**: 现代 Python 项目配置标准
+- **uv.lock**: 确保依赖版本一致性
+- **Git Submodules**: 模块化代码管理
 
-1. **find_video_path** - 查找视频文件
-2. **get_video_info** - 获取视频信息
-3. **clip_video** - 剪切视频
-4. **concat_videos** - 合并视频
-5. **play_video** - 播放视频
-6. **overlay_video** - 视频叠加
-7. **scale_video** - 视频缩放
-8. **extract_frames_from_video** - 提取视频帧
-9. **extract_audio_from_video** - 提取音频
 
-## 💡 使用示例
 
-### 完整的视频处理工作流
-```python
-import asyncio
-from ffmpeg_mcp_client import SimpleFFmpegMCPClient
-
-async def video_workflow():
-    client = SimpleFFmpegMCPClient()
-    
-    # 1. 查找视频文件
-    print("🔍 查找视频文件...")
-    result = await client.find_video("/Users/videos", "input.mp4")
-    print(result)
-    
-    # 2. 获取视频信息
-    print("\n📊 获取视频信息...")
-    info = await client.get_info("input.mp4")
-    print(info)
-    
-    # 3. 剪切视频
-    print("\n✂️ 剪切视频...")
-    clip_result = await client.clip(
-        "input.mp4", 
-        start="00:00:10", 
-        duration="00:00:30",
-        output="clip.mp4"
-    )
-    print(clip_result)
-    
-    # 4. 提取音频
-    print("\n🎵 提取音频...")
-    audio_result = await client.extract_audio("input.mp4", "audio.mp3")
-    print(audio_result)
-    
-    # 5. 缩放视频
-    print("\n📐 缩放视频...")
-    scale_result = await client.scale("input.mp4", 1280, 720, "scaled.mp4")
-    print(scale_result)
-
-# 运行工作流
-asyncio.run(video_workflow())
-```
-
-## 🔒 安全考虑
-
-- 文件类型验证
-- 文件大小限制
-- 路径安全检查
-- CORS 配置
-- API 密钥保护
-
-## 🐛 故障排除
-
-### 常见问题
-
-1. **依赖安装失败**
-   ```bash
-   # 清理缓存并重新安装
-   uv cache clean
-   uv sync --reinstall
-   ```
-
-2. **子模块拉取失败**
-   ```bash
-   # 重新初始化子模块
-   git submodule deinit --all -f
-   git submodule update --init --recursive
-   ```
-
-3. **端口被占用**
-   ```bash
-   # 查找占用端口的进程
-   lsof -i :8000
-   # 或修改 app.py 中的端口号
-   ```
-
-4. **FFmpeg MCP 连接失败**
-   - 确保 `ffmpeg-mcp` 目录存在且依赖已安装
-   - 检查 NVIDIA API 密钥配置
-   - 验证网络连接
-
-5. **视频处理失败**
-   - 确保系统已安装 FFmpeg
-   - 检查视频文件格式和路径
-   - 查看错误日志获取详细信息
-
-## 📈 性能优化
-
-- 使用 `uv` 进行快速依赖管理
-- 异步处理提高并发性能
-- 文件流式传输减少内存占用
-- 缓存机制提升响应速度
-
-## 🤝 贡献指南
-
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
-
-- [MCP](https://github.com/modelcontextprotocol/python-sdk) - Model Context Protocol
-- [NVIDIA NIM](https://developer.nvidia.com/nim) - AI 模型推理服务
-- [FFmpeg](https://ffmpeg.org/) - 视频处理工具
-- [FastAPI](https://fastapi.tiangolo.com/) - Web 框架
-- [uv](https://docs.astral.sh/uv/) - Python 包管理器
-
-## 📞 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- GitHub Issues: [提交问题](https://github.com/JackyHua23/mcp_demo/issues)
-- Email: [your-email@example.com]
-
----
-
-⭐ 如果这个项目对你有帮助，请给它一个星标！
