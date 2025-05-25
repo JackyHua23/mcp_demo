@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFmpeg MCP 智能视频处理助手</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-video"></i> FFmpeg MCP 智能视频处理助手</h1>
+                <p>基于 AI 的智能视频编辑工具</p>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 左侧面板 -->
+            <aside class="sidebar">
+                <div class="panel">
+                    <h3><i class="fas fa-upload"></i> 文件上传</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>拖拽视频文件到这里或点击上传</p>
+                        <input type="file" id="fileInput" accept="video/*" multiple>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            选择文件
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-folder"></i> 文件管理</h3>
+                    <div class="file-tabs">
+                        <button class="tab-btn active" onclick="switchTab('uploaded')">上传文件</button>
+                        <button class="tab-btn" onclick="switchTab('output')">输出文件</button>
+                    </div>
+                    <div class="file-list" id="uploadedFiles"></div>
+                    <div class="file-list hidden" id="outputFiles"></div>
+                    <button class="btn btn-secondary" onclick="refreshFiles()">
+                        <i class="fas fa-refresh"></i> 刷新
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-tools"></i> 可用工具</h3>
+                    <div class="tools-list" id="toolsList">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 右侧主要工作区 -->
+            <section class="workspace">
+                <div class="panel">
+                    <h3><i class="fas fa-robot"></i> AI 智能处理</h3>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message assistant">
+                                <div class="message-content">
+                                    <i class="fas fa-robot"></i>
+                                    <div class="text">
+                                        <p>您好！我是 FFmpeg MCP 智能视频处理助手。</p>
+                                        <p>您可以：</p>
+                                        <ul>
+                                            <li>上传视频文件进行处理</li>
+                                            <li>使用自然语言描述您的需求</li>
+                                            <li>获取视频信息、剪切、合并、转换等</li>
+                                        </ul>
+                                        <p>请告诉我您想要做什么？</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" placeholder="请输入您的需求，例如：'将 video.mp4 从第10秒开始剪切30秒'" />
+                                <button class="btn btn-primary" onclick="sendMessage()">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-cogs"></i> 快速操作</h3>
+                    <div class="quick-actions">
+                        <div class="action-group">
+                            <h4>视频信息</h4>
+                            <button class="btn btn-outline" onclick="quickAction('info')">
+                                <i class="fas fa-info-circle"></i> 获取视频信息
+                            </button>
+                        </div>
+                        <div class="action-group">
+                            <h4>视频剪切</h4>
+                            <div class="input-row">
+                                <input type="text" id="clipStart" placeholder="开始时间 (如: 00:01:30)">
+                                <input type="text" id="clipDuration" placeholder="持续时间 (如: 30)">
+                            </div>
+                            <button class="btn btn-outline" onclick="quickAction('clip')">
+                                <i class="fas fa-cut"></i> 剪切视频
+                            </button>
+                        </div>
+                        <div class="action-group">
+                            <h4>视频合并</h4>
+                            <button class="btn btn-outline" onclick="quickAction('concat')">
+                                <i class="fas fa-layer-group"></i> 合并选中视频
+                            </button>
+                        </div>
+                        <div class="action-group">
+                            <h4>视频缩放</h4>
+                            <div class="input-row">
+                                <input type="text" id="scaleWidth" placeholder="宽度 (如: 1920)">
+                                <input type="text" id="scaleHeight" placeholder="高度 (如: 1080)">
+                            </div>
+                            <button class="btn btn-outline" onclick="quickAction('scale')">
+                                <i class="fas fa-expand-arrows-alt"></i> 缩放视频
+                            </button>
+                        </div>
+                        <div class="action-group">
+                            <h4>音频提取</h4>
+                            <div class="input-row">
+                                <select id="audioFormat">
+                                    <option value="mp3">MP3</option>
+                                    <option value="wav">WAV</option>
+                                    <option value="aac" selected>AAC</option>
+                                    <option value="flac">FLAC</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline" onclick="quickAction('extract_audio')">
+                                <i class="fas fa-music"></i> 提取音频
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 加载指示器 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>处理中...</p>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html> 

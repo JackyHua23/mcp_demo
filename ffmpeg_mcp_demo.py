@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+
 class FFmpegMCPClient:
     """FFmpeg MCP客户端，用于与ffmpeg-mcp服务器交互"""
     
@@ -29,7 +30,12 @@ class FFmpegMCPClient:
         # 获取ffmpeg-mcp目录的绝对路径
         current_dir = os.path.dirname(os.path.abspath(__file__))
         ffmpeg_mcp_dir = os.path.join(current_dir, "ffmpeg-mcp")
-        
+        project_root = current_dir
+        uploads_dir = os.path.join(project_root, "uploads")
+        outputs_dir = os.path.join(project_root, "outputs")
+        # uploads = os.path.join(project_root,uploads_dir)
+        # outputs = os.path.join(project_root,outputs_dir)
+        # print(uploads)
         self.api_key = api_key or os.getenv(
             "NVIDIA_API_KEY", 
             ("nvapi-eVqx3Byag8gqjACkiH0lPHIq-_eN1JMkqM2NSyJUYoYQIx0v"
@@ -67,7 +73,10 @@ class FFmpegMCPClient:
                 "7. 视频缩放\n"
                 "8. 提取视频帧为图片\n"
                 "9. 提取视频中的音频\n"
-                "请根据用户的需求选择合适的工具并执行相应操作。"
+                "请根据用户的需求选择合适的工具并执行相应操作。\n"
+                f"上传文件的绝对路径在: {uploads_dir}\n"
+                f"输出文件的绝对路径在: {outputs_dir}\n"
+                "当用户提供文件路径时，请使用这些绝对路径。\n"
             )
         )
     
