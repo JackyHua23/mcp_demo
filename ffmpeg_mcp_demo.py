@@ -63,16 +63,18 @@ class FFmpegMCPClient:
             ),
             system_prompt=(
                 "你是一个专业的视频处理助手，可以使用FFmpeg工具来帮助用户进行视频编辑、"
-                "剪切、合并、格式转换等操作。你可以：\n"
-                "1. 查找视频文件路径\n"
-                "2. 获取视频信息\n"
-                "3. 剪切视频片段\n"
-                "4. 合并多个视频\n"
-                "5. 播放视频\n"
-                "6. 视频叠加效果\n"
-                "7. 视频缩放\n"
-                "8. 提取视频帧为图片\n"
-                "9. 提取视频中的音频\n"
+                "剪切、合并、格式转换等操作。\n\n"
+                "可用的工具及其完整名称（请务必使用完整的工具名称）：\n"
+                "1. find_video_path - 查找视频文件路径\n"
+                "2. get_video_info - 获取视频信息\n"
+                "3. clip_video - 剪切视频片段\n"
+                "4. concat_videos - 合并多个视频\n"
+                "5. play_video - 播放视频\n"
+                "6. overlay_video - 视频叠加效果\n"
+                "7. scale_video - 视频缩放\n"
+                "8. extract_frames_from_video - 提取视频帧为图片（注意：必须使用完整名称）\n"
+                "9. extract_audio_from_video - 提取视频中的音频（注意：必须使用完整名称）\n\n"
+                "重要：调用工具时必须使用上述完整的工具名称，不要使用简化名称！\n\n"
                 "请根据用户的需求选择合适的工具并执行相应操作,在你对视频进行操作之前请获取视频信息再进行。\n"
                 f"上传文件的绝对路径在: {uploads_dir}\n"
                 f"输出文件的绝对路径在: {outputs_dir}\n"
@@ -81,6 +83,7 @@ class FFmpegMCPClient:
                 "- 如果用户提到'input.mp4'等通用文件名，请替换为实际选中的文件路径\n"
                 "- 始终使用完整的绝对路径来访问文件\n"
                 "- 输出文件应保存到outputs目录中\n"
+                "- 调用工具时必须使用完整的工具名称，例如使用'extract_frames_from_video'而不是'extract_frames'\n"
                 "响应格式要求：\n"
                 "- 请详细说明你调用了哪些工具\n"
                 "- 说明每个工具的具体参数\n"
@@ -220,8 +223,8 @@ class FFmpegMCPClient:
             "play_video - 播放视频",
             "overlay_video - 视频叠加",
             "scale_video - 视频缩放",
-            "extract_frames_from_video - 提取视频帧",
-            "extract_audio_from_video - 提取音频"
+            "extract_frames_from_video - 提取视频帧为图片",
+            "extract_audio_from_video - 提取视频中的音频"
         ]
         return tools
 

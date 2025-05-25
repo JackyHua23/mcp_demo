@@ -152,7 +152,7 @@ function updateFileList(containerId, files, fileType) {
         selectedFileNames.set(file.path, file.name);
         
         // 检查是否是媒体文件
-        const isMediaFile = isVideoOrAudioFile(file.name);
+        const isMediaFileCheck = isMediaFile(file.name);
         
         fileItem.innerHTML = `
             <div class="file-info">
@@ -160,9 +160,9 @@ function updateFileList(containerId, files, fileType) {
                 <div class="file-size">${formatFileSize(file.size)}</div>
             </div>
             <div class="file-actions">
-                ${isMediaFile ? `
+                ${isMediaFileCheck ? `
                     <button class="btn btn-preview" onclick="previewMedia('${fileType}', '${file.name}', '${file.path}'); event.stopPropagation();" title="预览">
-                        <i class="fas fa-play"></i>
+                        <i class="fas ${isImageFile(file.name) ? 'fa-eye' : 'fa-play'}"></i>
                     </button>
                 ` : ''}
                 <button class="btn btn-outline" onclick="downloadFile('${fileType}', '${file.name}'); event.stopPropagation();" title="下载">
@@ -872,7 +872,16 @@ function renderMarkdown(text) {
     return text;
 }
 
-// 检查是否是视频或音频文件
+// 检查是否是媒体文件（视频、音频或图片）
+function isMediaFile(filename) {
+    const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp'];
+    const audioExtensions = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', '.wma'];
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico'];
+    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return videoExtensions.includes(extension) || audioExtensions.includes(extension) || imageExtensions.includes(extension);
+}
+
+// 检查是否是视频或音频文件（保持向后兼容）
 function isVideoOrAudioFile(filename) {
     const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp'];
     const audioExtensions = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', '.wma'];
@@ -892,6 +901,13 @@ function isAudioFile(filename) {
     const audioExtensions = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', '.wma'];
     const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
     return audioExtensions.includes(extension);
+}
+
+// 检查是否是图片文件
+function isImageFile(filename) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.ico'];
+    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return imageExtensions.includes(extension);
 }
 
 // 预览媒体文件
@@ -981,9 +997,67 @@ function showMediaPreview(fileType, filename, filePath) {
         audioWrapper.appendChild(audioIcon);
         audioWrapper.appendChild(audio);
         mediaContainer.appendChild(audioWrapper);
+    } else if (isImageFile(filename)) {
+        // 创建图片元素
+        const img = document.createElement('img');
+        img.src = mediaUrl;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '500px';
+        img.style.objectFit = 'contain';
+        img.style.borderRadius = '10px';
+        img.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+        
+        // 添加错误处理
+        img.onerror = function() {
+            mediaContainer.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #718096;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>无法加载图片文件</p>
+                    <p style="font-size: 0.9rem;">可能是格式不支持或文件损坏</p>
+                </div>
+            `;
+        };
+        
+        // 添加加载指示器和点击放大功能
+        img.onload = function() {
+            // 图片加载完成后，可以添加一些额外的信息
+            const imgInfo = document.createElement('div');
+            imgInfo.style.cssText = `
+                margin-top: 15px;
+                padding: 10px;
+                background: #f8fafc;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                color: #4a5568;
+                text-align: center;
+            `;
+            imgInfo.innerHTML = `
+                <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                尺寸: ${img.naturalWidth} × ${img.naturalHeight} 像素
+                <br><i class="fas fa-search-plus" style="margin-right: 5px; margin-top: 5px;"></i>
+                点击图片可放大查看
+            `;
+            mediaContainer.appendChild(imgInfo);
+        };
+        
+        // 添加点击放大功能
+        img.onclick = function() {
+            showImageFullscreen(img.src, filename);
+        };
+        
+        mediaContainer.appendChild(img);
     }
     
     // 显示基本文件信息
+    let fileTypeText = '未知文件';
+    if (isVideoFile(filename)) {
+        fileTypeText = '视频文件';
+    } else if (isAudioFile(filename)) {
+        fileTypeText = '音频文件';
+    } else if (isImageFile(filename)) {
+        fileTypeText = '图片文件';
+    }
+    
     mediaInfoContainer.innerHTML = `
         <h4><i class="fas fa-info-circle"></i> 文件信息</h4>
         <div class="info-item">
@@ -992,7 +1066,7 @@ function showMediaPreview(fileType, filename, filePath) {
         </div>
         <div class="info-item">
             <span class="info-label">文件类型</span>
-            <span class="info-value">${isVideoFile(filename) ? '视频文件' : '音频文件'}</span>
+            <span class="info-value">${fileTypeText}</span>
         </div>
         <div class="info-item">
             <span class="info-label">文件路径</span>
@@ -1043,6 +1117,45 @@ function closeMediaPreview() {
         mediaContainer.innerHTML = '';
         document.getElementById('mediaInfo').innerHTML = '';
     }, 300);
+}
+
+// 显示图片全屏查看
+function showImageFullscreen(imageSrc, filename) {
+    // 创建全屏容器
+    const fullscreenDiv = document.createElement('div');
+    fullscreenDiv.className = 'image-fullscreen';
+    
+    // 创建图片元素
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    img.alt = filename;
+    
+    // 添加关闭功能
+    fullscreenDiv.onclick = function() {
+        document.body.removeChild(fullscreenDiv);
+    };
+    
+    // 添加ESC键关闭功能
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            if (document.body.contains(fullscreenDiv)) {
+                document.body.removeChild(fullscreenDiv);
+            }
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // 添加到页面
+    fullscreenDiv.appendChild(img);
+    document.body.appendChild(fullscreenDiv);
+    
+    // 添加淡入动画
+    fullscreenDiv.style.opacity = '0';
+    setTimeout(() => {
+        fullscreenDiv.style.transition = 'opacity 0.3s ease';
+        fullscreenDiv.style.opacity = '1';
+    }, 10);
 }
 
 

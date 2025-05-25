@@ -1134,7 +1134,8 @@ body {
 }
 
 #mediaContainer video,
-#mediaContainer audio {
+#mediaContainer audio,
+#mediaContainer img {
     max-width: 100%;
     max-height: 400px;
     border-radius: 10px;
@@ -1147,6 +1148,40 @@ body {
 
 #mediaContainer audio {
     width: 100%;
+}
+
+#mediaContainer img {
+    max-height: 500px;
+    object-fit: contain;
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+}
+
+#mediaContainer img:hover {
+    transform: scale(1.02);
+}
+
+/* 图片全屏查看样式 */
+.image-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: zoom-out;
+}
+
+.image-fullscreen img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    border-radius: 0;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
 }
 
 /* 媒体信息样式 */

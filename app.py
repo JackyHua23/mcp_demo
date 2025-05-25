@@ -341,6 +341,18 @@ async def stream_media(file_type: str, filename: str):
                 mime_type = 'video/mp4'
             elif filename.lower().endswith(('.mp3', '.wav', '.aac', '.flac', '.ogg')):
                 mime_type = 'audio/mpeg'
+            elif filename.lower().endswith(('.jpg', '.jpeg')):
+                mime_type = 'image/jpeg'
+            elif filename.lower().endswith('.png'):
+                mime_type = 'image/png'
+            elif filename.lower().endswith('.gif'):
+                mime_type = 'image/gif'
+            elif filename.lower().endswith('.webp'):
+                mime_type = 'image/webp'
+            elif filename.lower().endswith('.svg'):
+                mime_type = 'image/svg+xml'
+            elif filename.lower().endswith(('.bmp', '.tiff', '.ico')):
+                mime_type = 'image/bmp'
             else:
                 mime_type = 'application/octet-stream'
         
