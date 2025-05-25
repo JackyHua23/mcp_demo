@@ -98,9 +98,13 @@ async def process_video_request_stream(request: VideoRequest):
     
     # 创建一个队列来存储进度消息
     progress_queue = asyncio.Queue()
+    thinking_content = []  # 存储思考过程内容
     
     async def progress_callback(message):
         await progress_queue.put(message)
+        # 如果是思考过程，单独存储
+        if message.startswith("💭 AI思考过程："):
+            thinking_content.append(message[8:])  # 移除前缀
     
     async def generate_stream():
         try:
@@ -125,8 +129,20 @@ async def process_video_request_stream(request: VideoRequest):
                         progress_queue.get(), 
                         timeout=0.1
                     )
-                    progress_data = {'type': 'progress', 'message': message}
-                    yield f"data: {json.dumps(progress_data)}\n\n"
+                    
+                    # 区分思考过程和普通进度消息
+                    if message.startswith("💭 AI思考过程："):
+                        # 发送思考过程消息
+                        thinking_data = {
+                            'type': 'thinking', 
+                            'message': message[8:]  # 移除前缀
+                        }
+                        yield f"data: {json.dumps(thinking_data)}\n\n"
+                    else:
+                        # 发送普通进度消息
+                        progress_data = {'type': 'progress', 'message': message}
+                        yield f"data: {json.dumps(progress_data)}\n\n"
+                        
                 except asyncio.TimeoutError:
                     # 没有新的进度消息，继续等待
                     continue
@@ -137,8 +153,18 @@ async def process_video_request_stream(request: VideoRequest):
             # 处理队列中剩余的消息
             while not progress_queue.empty():
                 message = await progress_queue.get()
-                progress_data = {'type': 'progress', 'message': message}
-                yield f"data: {json.dumps(progress_data)}\n\n"
+                if message.startswith("💭 AI思考过程："):
+                    thinking_data = {
+                        'type': 'thinking', 
+                        'message': message[8:]
+                    }
+                    yield f"data: {json.dumps(thinking_data)}\n\n"
+                else:
+                    progress_data = {'type': 'progress', 'message': message}
+                    yield f"data: {json.dumps(progress_data)}\n\n"
+            
+            # 发送思考过程完成信号
+            yield f"data: {json.dumps({'type': 'thinking_end'})}\n\n"
             
             # 开始流式发送最终响应
             yield f"data: {json.dumps({'type': 'response_start'})}\n\n"

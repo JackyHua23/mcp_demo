@@ -463,6 +463,14 @@ function handleStreamMessage(data, messageId) {
         case 'progress':
             updateThinkingProcess(data.message, messageId);
             break;
+        case 'thinking':
+            // 处理AI的思考过程内容
+            updateThinkingContent(data.message, messageId);
+            break;
+        case 'thinking_end':
+            // 思考过程结束，准备显示结果
+            finalizeThinkingProcess(messageId);
+            break;
         case 'response_start':
             // 开始接收响应内容，创建结果区域
             createResultSection(messageId);
@@ -628,6 +636,44 @@ function updateThinkingProcess(content, messageId) {
         const thinkingText = messageElement.querySelector('.thinking-text');
         if (thinkingText) {
             thinkingText.innerHTML = content.replace(/\n/g, '<br>');
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 更新思考过程内容（AI的实际思考）
+function updateThinkingContent(content, messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        const thinkingText = messageElement.querySelector('.thinking-text');
+        if (thinkingText) {
+            // 将思考过程内容添加到现有内容中
+            const currentContent = thinkingText.textContent || '';
+            const newContent = currentContent + '\n' + content;
+            thinkingText.innerHTML = renderMarkdown(newContent);
+        }
+        
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// 完成思考过程
+function finalizeThinkingProcess(messageId) {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+        // 移除思考过程的打字指示器
+        const thinkingIndicator = messageElement.querySelector('.thinking-content .typing-indicator');
+        if (thinkingIndicator) {
+            thinkingIndicator.remove();
+        }
+        
+        // 标记思考过程为完成状态
+        const thinkingContent = messageElement.querySelector('.thinking-content');
+        if (thinkingContent) {
+            thinkingContent.classList.add('completed');
         }
         
         const chatMessages = document.getElementById('chatMessages');

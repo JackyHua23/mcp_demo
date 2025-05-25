@@ -132,17 +132,83 @@ class FFmpegMCPClient:
                 if progress_callback:
                     await progress_callback("⚙️ 正在执行FFmpeg工具调用...")
                 
+                # 获取完整的响应，包括思考过程
                 response = await bridge.process_message(user_input)
                 
                 if progress_callback:
                     await progress_callback("✅ 处理完成，正在整理结果...")
                 
-                return response
+                # 分离思考过程和最终结果
+                thinking_process, final_result = self._separate_thinking_and_result(response)
+                
+                # 如果有思考过程，通过回调发送
+                if thinking_process and progress_callback:
+                    await progress_callback(f"💭 AI思考过程：\n{thinking_process}")
+                
+                return final_result
         except Exception as e:
             logger.error(f"处理请求时发生错误: {e}")
             if progress_callback:
                 await progress_callback(f"❌ 处理失败: {str(e)}")
             return f"错误: {e}"
+    
+    def _separate_thinking_and_result(self, response):
+        """
+        分离AI响应中的思考过程和最终结果
+        
+        Args:
+            response: AI的完整响应
+            
+        Returns:
+            tuple: (thinking_process, final_result)
+        """
+        # 查找<think>标签
+        import re
+        
+        # 匹配<think>...</think>标签
+        think_pattern = r'<think>(.*?)</think>'
+        think_matches = re.findall(think_pattern, response, re.DOTALL)
+        
+        # 提取思考过程
+        thinking_process = ""
+        if think_matches:
+            thinking_process = "\n".join(think_matches).strip()
+        
+        # 移除思考过程，得到最终结果
+        final_result = re.sub(think_pattern, '', response, flags=re.DOTALL).strip()
+        
+        # 如果没有找到think标签，尝试其他分离方法
+        if not thinking_process:
+            # 查找常见的思考过程标识
+            lines = response.split('\n')
+            thinking_lines = []
+            result_lines = []
+            in_thinking = False
+            
+            for line in lines:
+                # 检查是否是思考过程的开始
+                if any(keyword in line.lower() for keyword in ['分析', '思考', '考虑', '首先', '接下来', '然后']):
+                    if not result_lines:  # 如果还没有结果内容，认为是思考过程
+                        in_thinking = True
+                        thinking_lines.append(line)
+                        continue
+                
+                # 检查是否是结果的开始
+                if any(keyword in line.lower() for keyword in ['结果', '完成', '成功', '输出', '生成']):
+                    in_thinking = False
+                    result_lines.append(line)
+                    continue
+                
+                if in_thinking:
+                    thinking_lines.append(line)
+                else:
+                    result_lines.append(line)
+            
+            if thinking_lines:
+                thinking_process = '\n'.join(thinking_lines).strip()
+                final_result = '\n'.join(result_lines).strip()
+        
+        return thinking_process, final_result
     
     def get_available_tools(self):
         """获取可用的工具列表"""
