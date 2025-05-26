@@ -9,7 +9,7 @@
 
 一个基于 MCP (Model Context Protocol) 的智能视频处理 AI-Agent，集成 NVIDIA NIM、FFmpeg 和 Web 搜索功能，提供自然语言视频编辑体验。
 
-[🚀 快速开始](#-快速开始) • [📖 使用指南](#-使用指南) • [🛠️ API 文档](#️-api-文档) • [🤝 贡献指南](#-贡献指南)
+[🚀 快速开始](#-快速开始) • [📖 使用指南](#-使用指南) • [🛠️ API 文档](#️-api-文档) 
 
 </div>
 
@@ -20,8 +20,6 @@
 - **🎬 专业视频处理**: 基于 FFmpeg 的完整视频编辑工具链
 - **🌐 现代化 Web 界面**: 响应式设计，支持拖拽上传和实时预览
 - **⚡ 流式响应**: 实时显示处理进度和 AI 思考过程
-- **🔍 智能搜索**: 集成 Tavily 实时网络信息检索
-- **📱 多模态支持**: 文本、图像、视频等多种媒体格式
 
 ### 🛠️ 支持的视频操作
 | 功能 | 描述 | 示例命令 |
@@ -80,7 +78,7 @@ mcp_demo/
 - **Python**: 3.12+ (推荐 3.12.7)
 - **包管理器**: [uv](https://docs.astral.sh/uv/) (现代化 Python 包管理)
 - **系统工具**: Git, FFmpeg
-- **API 密钥**: NVIDIA API Key (必需), Tavily API Key (可选)
+- **API 密钥**: NVIDIA API Key
 
 ### 🔧 安装步骤
 
@@ -118,9 +116,6 @@ nano .env
 ```bash
 # NVIDIA API 密钥 (必需) - 获取地址: https://build.nvidia.com/
 NVIDIA_API_KEY="your_nvidia_api_key_here"
-
-# Tavily API 密钥 (可选) - 获取地址: https://tavily.com/
-TAVILY_API_KEY="your_tavily_api_key_here"
 ```
 
 #### 4️⃣ 启动应用
